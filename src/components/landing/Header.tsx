@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useState } from 'react';
@@ -16,9 +16,11 @@ export const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
       <div className="w-full max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-mv-gradient rounded-lg">
-              <Car className="h-5 w-5 text-white" />
-            </div>
+            <img 
+              src="/assets/logos/logo.png.png" 
+              alt="MV Auto Center Logo" 
+              className="h-8 w-auto"
+            />
             <h1 className="text-lg font-bold bg-mv-gradient bg-clip-text text-transparent">
               MV Auto Center
             </h1>

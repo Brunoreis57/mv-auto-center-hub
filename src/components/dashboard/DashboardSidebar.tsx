@@ -8,7 +8,6 @@ import {
   Users, 
   Package, 
   Plus,
-  Car,
   Settings,
   LogOut,
   DollarSign,
@@ -65,9 +64,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeView, 
       {/* Header */}
       <div className="p-4 border-b border-mv-blue-100 dark:border-mv-blue-800">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-mv-gradient rounded-lg">
-            <Car className="h-5 w-5 text-white" />
-          </div>
+          <img 
+            src="/assets/logos/logo.png.png" 
+            alt="MV Auto Center Logo" 
+            className="h-8 w-auto"
+          />
           <div>
             <h2 className="font-bold text-base bg-mv-gradient bg-clip-text text-transparent">
               MV Auto Center
