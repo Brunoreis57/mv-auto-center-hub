@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,69 +9,66 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Plus, Edit, Trash2, User, Mail, Phone, Calendar } from 'lucide-react';
 import { UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { userServices } from '@/lib/services/users';
+
+type Role = 'administrador' | 'funcionario';
 
 interface Employee {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  role: UserRole;
-  hireDate: string;
-  isActive: boolean;
+  role: Role;
+  active: boolean;
+  created_at: string;
 }
-
-const mockEmployees: Employee[] = [
-  {
-    id: '1',
-    name: 'João Silva',
-    email: 'joao@mvauto.com',
-    phone: '(11) 99999-9999',
-    role: 'funcionario',
-    hireDate: '2024-01-15',
-    isActive: true
-  },
-  {
-    id: '2',
-    name: 'Maria Santos',
-    email: 'maria@mvauto.com',
-    phone: '(11) 88888-8888',
-    role: 'administrador',
-    hireDate: '2023-06-10',
-    isActive: true
-  },
-  {
-    id: '3',
-    name: 'Pedro Costa',
-    email: 'pedro@mvauto.com',
-    phone: '(11) 77777-7777',
-    role: 'funcionario',
-    hireDate: '2024-03-20',
-    isActive: false
-  }
-];
 
 export const EmployeesView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    role: 'funcionario' as UserRole
+    password: '',
+    role: 'funcionario' as Role
   });
   const { toast } = useToast();
+
+  // Carregar funcionários
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      const data = await userServices.findAll();
+      // Garantir que o role seja do tipo correto e converter a data
+      const typedEmployees = data.map(emp => ({
+        id: emp.id,
+        name: emp.name,
+        email: emp.email,
+        role: emp.role === 'administrador' ? 'administrador' as const : 'funcionario' as const,
+        active: emp.active,
+        created_at: new Date(emp.created_at).toISOString()
+      }));
+      setEmployees(typedEmployees);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar funcionários",
+        variant: "destructive"
+      });
+    }
+  };
 
   const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleBadgeColor = (role: UserRole) => {
+  const getRoleBadgeColor = (role: Role) => {
     switch (role) {
-      case 'desenvolvedor':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
       case 'administrador':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'funcionario':
@@ -81,42 +78,53 @@ export const EmployeesView: React.FC = () => {
     }
   };
 
-  const handleAddEmployee = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
+  const handleAddEmployee = async () => {
+    try {
+      if (!formData.name || !formData.email || (!editingEmployee && !formData.password)) {
+        toast({
+          title: "Erro",
+          description: "Preencha todos os campos obrigatórios",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (editingEmployee) {
+        await userServices.update(editingEmployee.id, {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.password ? { password: formData.password } : {})
+        });
+        toast({
+          title: "Sucesso",
+          description: "Funcionário atualizado com sucesso"
+        });
+      } else {
+        await userServices.create({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        });
+        toast({
+          title: "Sucesso",
+          description: "Funcionário adicionado com sucesso"
+        });
+      }
+
+      loadEmployees();
+      setFormData({ name: '', email: '', password: '', role: 'funcionario' });
+      setEditingEmployee(null);
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar funcionário:', error);
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
+        description: error.message || "Erro ao salvar funcionário. Tente novamente.",
         variant: "destructive"
       });
-      return;
     }
-
-    const newEmployee: Employee = {
-      id: Date.now().toString(),
-      ...formData,
-      hireDate: new Date().toISOString().split('T')[0],
-      isActive: true
-    };
-
-    if (editingEmployee) {
-      setEmployees(employees.map(emp => 
-        emp.id === editingEmployee.id ? { ...newEmployee, id: editingEmployee.id, hireDate: editingEmployee.hireDate } : emp
-      ));
-      toast({
-        title: "Sucesso",
-        description: "Funcionário atualizado com sucesso"
-      });
-    } else {
-      setEmployees([...employees, newEmployee]);
-      toast({
-        title: "Sucesso",
-        description: "Funcionário adicionado com sucesso"
-      });
-    }
-
-    setFormData({ name: '', email: '', phone: '', role: 'funcionario' });
-    setEditingEmployee(null);
-    setIsDialogOpen(false);
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -124,28 +132,46 @@ export const EmployeesView: React.FC = () => {
     setFormData({
       name: employee.name,
       email: employee.email,
-      phone: employee.phone,
+      password: '',
       role: employee.role
     });
     setIsDialogOpen(true);
   };
 
-  const handleDeleteEmployee = (employeeId: string) => {
-    setEmployees(employees.filter(emp => emp.id !== employeeId));
-    toast({
-      title: "Sucesso",
-      description: "Funcionário removido com sucesso"
-    });
+  const handleDeleteEmployee = async (employeeId: string) => {
+    try {
+      await userServices.delete(employeeId);
+      loadEmployees();
+      toast({
+        title: "Sucesso",
+        description: "Funcionário removido com sucesso"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao remover funcionário",
+        variant: "destructive"
+      });
+    }
   };
 
-  const toggleEmployeeStatus = (employeeId: string) => {
-    setEmployees(employees.map(emp => 
-      emp.id === employeeId ? { ...emp, isActive: !emp.isActive } : emp
-    ));
-    toast({
-      title: "Sucesso",
-      description: "Status do funcionário atualizado"
-    });
+  const toggleEmployeeStatus = async (employee: Employee) => {
+    try {
+      await userServices.update(employee.id, {
+        active: !employee.active
+      });
+      loadEmployees();
+      toast({
+        title: "Sucesso",
+        description: "Status do funcionário atualizado"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status do funcionário",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -158,7 +184,7 @@ export const EmployeesView: React.FC = () => {
           <DialogTrigger asChild>
             <Button className="bg-mv-gradient hover:opacity-90" onClick={() => {
               setEditingEmployee(null);
-              setFormData({ name: '', email: '', phone: '', role: 'funcionario' });
+              setFormData({ name: '', email: '', password: '', role: 'funcionario' });
             }}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Funcionário
@@ -189,29 +215,32 @@ export const EmployeesView: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone *</Label>
+                <Label htmlFor="password">{editingEmployee ? 'Nova Senha (opcional)' : 'Senha *'}</Label>
                 <Input 
-                  id="phone" 
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="(11) 99999-9999"
+                  id="password" 
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="********"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">Cargo *</Label>
-                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as UserRole })}>
+                <Label htmlFor="role">Função</Label>
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(value: Role) => setFormData({ ...formData, role: value })}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cargo" />
+                    <SelectValue placeholder="Selecione uma função" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="funcionario">Funcionário</SelectItem>
                     <SelectItem value="administrador">Administrador</SelectItem>
-                    <SelectItem value="desenvolvedor">Desenvolvedor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
@@ -223,77 +252,70 @@ export const EmployeesView: React.FC = () => {
         </Dialog>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      <div className="flex items-center space-x-2">
+        <Search className="h-5 w-5 text-gray-500" />
+        <Input
+          placeholder="Buscar funcionários..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredEmployees.map((employee) => (
-          <Card key={employee.id} className="bg-card/90 dark:bg-card/75 hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-mv-blue-100 dark:bg-mv-blue-900 rounded-full">
-                    <User className="h-6 w-6 text-mv-blue-600 dark:text-mv-blue-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {employee.name}
-                      <Badge className={getRoleBadgeColor(employee.role)}>
-                        {employee.role.charAt(0).toUpperCase() + employee.role.slice(1)}
-                      </Badge>
-                      <Badge variant={employee.isActive ? "default" : "secondary"}>
-                        {employee.isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </CardTitle>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-2">
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-4 w-4 flex-shrink-0" />
-                        <span>{employee.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-4 w-4 flex-shrink-0" />
-                        <span>{employee.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 flex-shrink-0" />
-                        <span>Contratado em {new Date(employee.hireDate).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => handleEditEmployee(employee)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => toggleEmployeeStatus(employee.id)}>
-                    {employee.isActive ? "Desativar" : "Ativar"}
-                  </Button>
-                  <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => handleDeleteEmployee(employee.id)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir
-                  </Button>
-                </div>
+          <Card key={employee.id} className={!employee.active ? 'opacity-70' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                <Badge className={getRoleBadgeColor(employee.role)}>
+                  {employee.role.charAt(0).toUpperCase() + employee.role.slice(1)}
+                </Badge>
+              </CardTitle>
+              <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEditEmployee(employee)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteEmployee(employee.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardHeader>
+            <CardContent>
+              <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4 opacity-70" />
+                  <span className="text-sm font-medium">{employee.name}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4 opacity-70" />
+                  <span className="text-sm">{employee.email}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 opacity-70" />
+                  <span className="text-sm">
+                    {new Date(employee.created_at).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => toggleEmployeeStatus(employee)}
+                >
+                  {employee.active ? 'Desativar' : 'Ativar'}
+                </Button>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>
-
-      {filteredEmployees.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Nenhum funcionário encontrado.</p>
-        </div>
-      )}
     </div>
   );
 };
