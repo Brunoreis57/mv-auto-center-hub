@@ -11,13 +11,11 @@ import { UserRole } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { userServices } from '@/lib/services/users';
 
-type Role = 'administrador' | 'funcionario';
-
 interface Employee {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: UserRole;
   active: boolean;
   created_at: string;
 }
@@ -31,7 +29,7 @@ export const EmployeesView: React.FC = () => {
     name: '',
     email: '',
     password: '',
-    role: 'funcionario' as Role
+    role: 'funcionario' as UserRole
   });
   const { toast } = useToast();
 
@@ -43,16 +41,7 @@ export const EmployeesView: React.FC = () => {
   const loadEmployees = async () => {
     try {
       const data = await userServices.findAll();
-      // Garantir que o role seja do tipo correto e converter a data
-      const typedEmployees = data.map(emp => ({
-        id: emp.id,
-        name: emp.name,
-        email: emp.email,
-        role: emp.role === 'administrador' ? 'administrador' as const : 'funcionario' as const,
-        active: emp.active,
-        created_at: new Date(emp.created_at).toISOString()
-      }));
-      setEmployees(typedEmployees);
+      setEmployees(data);
     } catch (error) {
       toast({
         title: "Erro",
@@ -67,8 +56,10 @@ export const EmployeesView: React.FC = () => {
     employee.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleBadgeColor = (role: Role) => {
+  const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
+      case 'desenvolvedor':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
       case 'administrador':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       case 'funcionario':
@@ -117,11 +108,10 @@ export const EmployeesView: React.FC = () => {
       setFormData({ name: '', email: '', password: '', role: 'funcionario' });
       setEditingEmployee(null);
       setIsDialogOpen(false);
-    } catch (error: any) {
-      console.error('Erro ao salvar funcionário:', error);
+    } catch (error) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao salvar funcionário. Tente novamente.",
+        description: "Erro ao salvar funcionário",
         variant: "destructive"
       });
     }
@@ -228,7 +218,7 @@ export const EmployeesView: React.FC = () => {
                 <Label htmlFor="role">Função</Label>
                 <Select 
                   value={formData.role} 
-                  onValueChange={(value: Role) => setFormData({ ...formData, role: value })}
+                  onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma função" />
