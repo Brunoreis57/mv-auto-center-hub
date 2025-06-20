@@ -48,7 +48,7 @@ export const Hero: React.FC = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="w-full sm:w-auto border-white text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8 py-3"
+              className="w-full sm:w-auto border-white text-black hover:bg-white hover:text-black text-base sm:text-lg px-6 sm:px-8 py-3"
             >
               Agendar Horário
             </Button>
