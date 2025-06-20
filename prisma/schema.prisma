@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model appointments {
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id             String                  @db.Uuid
+  vehicle_id            String                  @db.Uuid
+  service_id            String                  @db.Uuid
+  employee_id           String                  @db.Uuid
+  status                String                  @db.VarChar(20)
+  scheduled_at          DateTime                @db.Timestamp(6)
+  completed_at          DateTime?               @db.Timestamp(6)
+  total_price           Decimal?                @db.Decimal(10, 2)
+  notes                 String?
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  clients               clients                 @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                 users                   @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services              services                @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicles              vehicles                @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  appointments_products appointments_products[]
+
+  @@index([client_id], map: "idx_appointments_client_id")
+  @@index([employee_id], map: "idx_appointments_employee_id")
+  @@index([scheduled_at], map: "idx_appointments_scheduled_at")
+  @@index([service_id], map: "idx_appointments_service_id")
+  @@index([status], map: "idx_appointments_status")
+  @@index([vehicle_id], map: "idx_appointments_vehicle_id")
+}
+
+model appointments_products {
+  appointment_id String       @db.Uuid
+  product_id     String       @db.Uuid
+  quantity       Int
+  price_at_time  Decimal      @db.Decimal(10, 2)
+  appointments   appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products       products     @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([appointment_id, product_id])
+}
+
+model clients {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String         @db.VarChar(100)
+  email        String?        @db.VarChar(100)
+  phone        String?        @db.VarChar(20)
+  document     String?        @db.VarChar(20)
+  address      String?
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  appointments appointments[]
+  vehicles     vehicles[]
+
+  @@index([document], map: "idx_clients_document")
+  @@index([email], map: "idx_clients_email")
+}
+
+model products {
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                  String                  @db.VarChar(100)
+  description           String?
+  price                 Decimal                 @db.Decimal(10, 2)
+  stock_quantity        Int                     @default(0)
+  min_stock             Int                     @default(0)
+  active                Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  appointments_products appointments_products[]
+}
+
+model services {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String         @db.VarChar(100)
+  description  String?
+  price        Decimal        @db.Decimal(10, 2)
+  duration     Int
+  active       Boolean        @default(true)
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  appointments appointments[]
+}
+
+model settings {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  key        String   @unique @db.VarChar(50)
+  value      String?
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([key], map: "idx_settings_key")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String         @db.VarChar(100)
+  email         String         @unique @db.VarChar(100)
+  password_hash String         @db.VarChar(255)
+  role          String         @db.VarChar(20)
+  active        Boolean        @default(true)
+  created_at    DateTime       @default(now()) @db.Timestamp(6)
+  updated_at    DateTime       @default(now()) @db.Timestamp(6)
+  appointments  appointments[]
+}
+
+model vehicles {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id    String         @db.Uuid
+  brand        String         @db.VarChar(50)
+  model        String         @db.VarChar(50)
+  year         Int?
+  plate        String?        @db.VarChar(10)
+  color        String?        @db.VarChar(30)
+  notes        String?
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  appointments appointments[]
+  clients      clients        @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([client_id], map: "idx_vehicles_client_id")
+  @@index([plate], map: "idx_vehicles_plate")
+}
