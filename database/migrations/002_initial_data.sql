@@ -20,7 +20,7 @@ INSERT INTO products (name, description, price, stock_quantity, min_stock) VALUE
 
 -- Insert initial settings
 INSERT INTO settings (key, value) VALUES
-('company_name', 'MV Auto Center'),
+('company_name', 'MV Centro Automotivo'),
 ('company_phone', '(11) 99999-9999'),
 ('company_email', 'contato@mvauto.com'),
 ('company_address', 'Rua dos Automóveis, 123 - São Paulo/SP'),

@@ -66,12 +66,12 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeView, 
         <div className="flex items-center gap-3">
           <img 
             src="/assets/logos/logo.png.png" 
-            alt="MV Auto Center Logo" 
+            alt="MV Centro Automotivo Logo" 
             className="h-8 w-auto"
           />
           <div>
             <h2 className="font-bold text-base bg-mv-gradient bg-clip-text text-transparent">
-              MV Auto Center
+              MV Centro Automotivo
             </h2>
             <p className="text-xs text-muted-foreground">Sistema de Gestão</p>
           </div>

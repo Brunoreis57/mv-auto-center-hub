@@ -18,11 +18,11 @@ export const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
           <div className="flex items-center gap-2">
             <img 
               src="/assets/logos/logo.png.png" 
-              alt="MV Auto Center Logo" 
+              alt="MV Centro Automotivo Logo" 
               className="h-8 w-auto"
             />
             <h1 className="text-lg font-bold bg-mv-gradient bg-clip-text text-transparent">
-              MV Auto Center
+              MV Centro Automotivo
             </h1>
           </div>
 

@@ -51,8 +51,8 @@ interface ServicePrice {
 }
 
 const mockSiteSettings: SiteSettings = {
-  siteName: 'MV Auto Center',
-  heroTitle: 'MV Auto Center',
+  siteName: 'MV Centro Automotivo',
+  heroTitle: 'MV Centro Automotivo',
   heroSubtitle: 'Cuidamos do seu veículo com excelência e dedicação',
   aboutText: 'Especialistas em estética automotiva com mais de 10 anos de experiência no mercado.',
   contactPhone: '(11) 99999-9999',

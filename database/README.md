@@ -1,6 +1,6 @@
-# Banco de Dados - MV Auto Center
+# Banco de Dados - MV Centro Automotivo
 
-Este documento descreve a estrutura do banco de dados do sistema MV Auto Center.
+Este documento descreve a estrutura do banco de dados do sistema MV Centro Automotivo.
 
 ## Estrutura
 

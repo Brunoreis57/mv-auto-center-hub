@@ -36,8 +36,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
       
       if (success) {
         toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao sistema MV Auto Center",
+          title: "Bem-vindo",
+          description: "Bem-vindo ao sistema MV Centro Automotivo",
+          duration: 5000,
         });
         onSuccess();
         onClose();
@@ -73,7 +74,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             <div className="p-2 bg-mv-gradient rounded-lg">
               <Car className="h-5 w-5 text-white" />
             </div>
-            Login - MV Auto Center
+            Login - MV Centro Automotivo
           </DialogTitle>
         </DialogHeader>
 
