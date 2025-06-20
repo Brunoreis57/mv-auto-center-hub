@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "prisma generate && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
+    "@prisma/client": "^6.10.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -63,7 +64,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^8.56.0",
-    "@prisma/client": "^6.10.1",
     "@tailwindcss/typography": "^0.5.10",
     "@types/node": "^20.19.1",
     "@types/react": "^18.2.52",
